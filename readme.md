@@ -1,30 +1,10 @@
-# Allolib playground
+# Allolib playground & Evan Nguyen S22
 [![Build Status](https://travis-ci.org/AlloSphere-Research-Group/allolib_playground.svg?branch=master)](https://travis-ci.org/AlloSphere-Research-Group/allolib_playground)
 
-This repo provides a quick and simple way to build allolib applications. It also contains a set of tutorials and cookbook examples in addition to the examples in the allolib library.
+This repository contains several branches that I will never publish to main, because I like compartmentalizing my work.
+-localpython: This is my main project. This uses a UDP server from allolib (with courtesy of Lance Putnam, 2014) combined with a UDP client on python - by me. The goal here is to bridge the gap between more complex apps that are more suitably ran on python, to still interact within a c++ allolib environment. The project itself is an attempt at hand-controlled/gesture instrumentals, which will give the user full control through hand motion alone (webcam needed).
+-bazel: Initial tests in C++ to import mediapipe through bazel. It successfully compiles and all the windows build commandlines (which were modified for my system), can be found in log.txt.
 
-## Setup
 
-Get all dependencies and tools required by allolib. See the [readme file for allolib](https://github.com/AlloSphere-Research-Group/allolib/blob/master/readme.md).
-
-Run the init.sh script to get the allolib and al_ext libraries or execute in
-a bash shell:
-
-    git submodule update --recursive --init
-
-## Building and running applications
-
-The allolib playground provides basic facilties for building and debugging 
-single file applications. On a bash shell on Windows, Linux and OS X do:
-
-    ./run.sh path/to/file.cpp
-
-This will build allolib, and create an executable for the file.cpp called 'file' inside the '''path/to/bin''' directory. It will then run the application.
-
-You can add a file called '''flags.cmake''' in the '''path/to/''' directory which will be added to the build scripts. Here you can add dependencies, include directories, linking and anything else that cmake could be used for. See the example in '''examples/user_flags'''.
-
-For more complex projects follow the template provided in allotemplate
-[https://github.com/AlloSphere-Research-Group/allotemplate](). This requires 
-some knowledge of Cmake but allows more complex workflows and multifile
-applications or multiple target binaries.
+Please see the original repository, found here: https://github.com/AlloSphere-Research-Group/allolib_playground
 

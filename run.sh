@@ -177,6 +177,8 @@ if [ ${APP_BUILD_RESULT} != 0 ]; then
   exit 1
 fi
 
+read
+
 # run app
 # go to where the binary is so we have cwd there
 # (app's cmake is set to put binary in 'bin')

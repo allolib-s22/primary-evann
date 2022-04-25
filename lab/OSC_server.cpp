@@ -171,7 +171,7 @@ struct MyApp : public App {
 
   // This gets called whenever we receive a packet
   void onMessage(osc::Message& m) override {
-    m.print();
+    //m.print();
 
     // Check that the address and tags match what we expect
     if (m.addressPattern() == "/test" && m.typeTags() == "si") {
@@ -186,12 +186,13 @@ struct MyApp : public App {
 
     if(m.addressPattern() == "/test"){
       const float A4 = 440.f;
-      int midiNote = 62;
+      int midiNote; 
+      m >> midiNote;
       synthManager.voice()->setInternalParameterValue(
           "frequency", ::pow(2.f, (midiNote - 69.f) / 12.f) * A4);
       synthManager.triggerOn(midiNote);
 
-      std::cout << "received" << std::endl;
+      std::cout << "received note " << midiNote << std::endl;
       std::cout << m.addressPattern() << std::endl;
 
       //synthManager.triggerOff(midiNote);

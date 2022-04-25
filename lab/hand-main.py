@@ -2,7 +2,8 @@ import numpy as np
 
 from pythonosc.udp_client import SimpleUDPClient
 
-ip = "127.0.0.1"
+#ip = "127.0.0.1"
+ip = 'localhost'
 port = 9010
 
 client = SimpleUDPClient(ip, port)  # Create client

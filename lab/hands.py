@@ -51,6 +51,6 @@ def mediapipe_camera_hands(client):
 
 
       #Sends to func.py.
-      process(results.multi_hand_landmarks, client)
+      process(results.multi_hand_landmarks, results.multi_handedness, client)
 
   cap.release()

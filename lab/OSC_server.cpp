@@ -155,6 +155,7 @@ struct MyApp : public App {
     //For debugging
     //m.print(); 
 
+    /**
     if(m.addressPattern() == "/test"){
       const float A4 = 440.f;
       int midiNote; 
@@ -168,18 +169,28 @@ struct MyApp : public App {
 
       //synthManager.triggerOff(midiNote);
     }
-
+    **/
 
     if(m.addressPattern() == "/frequency/"){
-      const float A4 = 440.f;
+      float i;
+      m >> i;
 
-      float input;
-      m >> input;
-
-      float midiNote = input*(88-60) + 60;
       synthManager.voice()->setInternalParameterValue(
-          "frequency", ::pow(2.f, (midiNote - 69.f) / 12.f) * A4);
-    
+          "frequency", i);
+    }
+
+    if(m.addressPattern() == "/triggerOn/"){
+      int i;
+      m >> i;
+
+      synthManager.triggerOn(i);
+    }
+
+    if(m.addressPattern() == "/triggerOff/"){
+      int i;
+      m >> i;
+
+      synthManager.triggerOff(i);
     }
   }
 };

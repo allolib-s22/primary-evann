@@ -5,4 +5,4 @@ port = 9010
 
 client = SimpleUDPClient(ip, port)  # Create client
 
-client.send_message("/test", 12)   # Send float message
+client.send_message("/test", 62)   # Send float message

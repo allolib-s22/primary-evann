@@ -72,8 +72,10 @@ print(segDist)
 fingers = [[4, 2], [8, 5], [12, 9], [16, 13], [20, 17]]
 
 pressed = {}
+note = {}
 for x in range(0, len(fingers)*2):
   pressed[str(x)] = 0
+  note[str(x)] = 0
 
 detecting = False
 
@@ -95,7 +97,7 @@ def process(landmarks, handedness, client, shape):
 
     for x in range(0, len(fingers)*2):
       pressed[str(x)] = 0
-      client.send_message("/triggerOff/", x)
+      client.send_message("/triggerOff/", note[str(x)])
 
   if landmarks:
     l = 0 #num of hands#
@@ -129,19 +131,22 @@ def process(landmarks, handedness, client, shape):
             pressed[str(i)] = 1
             
             A_4 = 440
-            midiNote = int((1-b.x) * (80-40) + 40)
+            midiNote = int((1-b.x) * (80-60) + 60)
             o = pow(2, ((midiNote - 69) / 12)) * A_4
             print(o)
             #o = (600-200)*(1-b.x) + 200
 
+            note[str(i)]=midiNote-60
+
             print(i, " pressed note ", midiNote)
             client.send_message("/frequency/", o)
-            client.send_message("/triggerOn/", i)
+            client.send_message("/triggerOn/", midiNote-60)
 
           elif(d >= press_threshold) and pressed[str(i)]:
             pressed[str(i)] = 0
             print(i, " released")
-            client.send_message("/triggerOff/", i)
+            client.send_message("/triggerOff/", note[str(i)])
+            print(note[str(i)])
 
           i += 1
 

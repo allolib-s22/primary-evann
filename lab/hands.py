@@ -42,15 +42,16 @@ def mediapipe_camera_hands(client):
               image,
               hand_landmarks,
               mp_hands.HAND_CONNECTIONS,
-              mp_drawing_styles.get_default_hand_landmarks_style(),
-              mp_drawing_styles.get_default_hand_connections_style())
+              mp_drawing_styles.get_default_hand_landmarks_style())
+              #mp_drawing_styles.get_default_hand_connections_style())
       # Flip the image horizontally for a selfie-view display.
       cv2.imshow('MediaPipe Hands', cv2.flip(image, 1))
       if cv2.waitKey(5) & 0xFF == 27:
         break
 
-
+      width  = cap.get(3)  # float `width`
+      height = cap.get(4)  # float `height`
       #Sends to func.py.
-      process(results.multi_hand_landmarks, results.multi_handedness, client)
+      process(results.multi_hand_landmarks, results.multi_handedness, client, (width, height))
 
   cap.release()

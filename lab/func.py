@@ -9,7 +9,9 @@ finger_denote = []
 for point in mp_hands.HandLandmark:
   finger_denote.append(point)
 
-A4 = 440.0
+key_map_w = [0, 2, 4, 5, 7, 9, 11]
+key_map_b = [1, 3, 6, 8, 10]
+octL = 24
 
 #CREATED BY EVAN NGUYEN.
 #IF THIS APP FAILS TO DETECT YOUR PRESSES IN CONSOLE, PLEASE SEE LINE 126 IN CODE:
@@ -80,6 +82,7 @@ detecting = False
 
 def process(landmarks, handedness, client, shape):
   fact = round(shape[0]/shape[1], 2)
+  halfway = shape[1]/2
 
   global detecting
   confidence = 0
@@ -131,16 +134,18 @@ def process(landmarks, handedness, client, shape):
             
             A_4 = 440
             midiNote = int((1-b.x) * (80-60) + 60)
+
+
             o = pow(2, ((midiNote - 69) / 12)) * A_4 #We do the calculation of the frequency in-home.
             #o = (600-200)*(1-b.x) + 200
 
-            note[str(i)]=midiNote-60 #Clamp our value
+            note[str(i)]=midiNote-55 #Clamp our value
 
             #print(o)
             print(i, " pressed note ", midiNote)
 
             client.send_message("/frequency/", o)
-            client.send_message("/triggerOn/", midiNote-60)
+            client.send_message("/triggerOn/", note[str(i)])
 
           elif(d >= press_threshold) and pressed[str(i)]:
             pressed[str(i)] = 0

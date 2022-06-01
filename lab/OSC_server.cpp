@@ -14,8 +14,6 @@ Lance Putnam, Oct. 2014
 
 #include <cstdio>  // for printing to stdout
 
-#include "SineEnv.cpp"
-
 #include "Gamma/Analysis.h"
 #include "Gamma/Effects.h"
 #include "Gamma/Envelope.h"
@@ -28,18 +26,19 @@ Lance Putnam, Oct. 2014
 #include "al/ui/al_ControlGUI.hpp"
 #include "al/ui/al_Parameter.hpp"
 
-#include "al/graphics/al_Shapes.hpp" //Piano
 #include "al/graphics/al_Font.hpp"
 
-using namespace al;
+#include "SineEnv.cpp"
+#include "piano.hpp"
 
-#define N 20
+using namespace al;
 
 // App has osc::PacketHandler as base class
 struct MyApp : public App {
 
 
   SynthGUIManager<SineEnv> synthManager{"SineEnv"};
+  Piano pianogui = Piano(20);
 
 
   // can give params in ctor
@@ -55,23 +54,6 @@ struct MyApp : public App {
   the server checks for new data on the on the port. You will	want to tune
   this to rate at which the client is sending packets.*/
   // :	server(16447, "", 0.05)
-
-  // Mesh and variables for drawing piano keys
-  Mesh meshKey;
-  float keyWidth, keyHeight;
-  float keyPadding = 2.f;
-  float fontSize;
-  
-  bool press[N*2]; // key down
-  int key_map_black[N];
-  int key_map_white[N];
-
-  std::string whitekeyLabels[20] = {"Z","X","C","V","B","N","M",",",".","/",
-                                    "Q","W","E","R","T","Y","U","I","O","P"};
-  std::string blackkeyLabels[20] = {"S","D","","G","H","J","","L",";","",
-                                    "2","3","","5","6","7","","9","0",""};
-  // Font renderder
-  FontRenderer fontRender;
 
   void onCreate() override {
     // Print out our IP address
@@ -92,41 +74,10 @@ struct MyApp : public App {
 
     
 
-    //SECTION BREAK ---------------------------------------------------
-    // Calculate the size of piano keys based on the app window size
-    float w = float(width());
-    float h = float(height());
-    keyWidth = w / 10.f - keyPadding * 2.f;
-    keyHeight = h / 2.f - keyPadding * 2.f;
-    fontSize = keyWidth * 0.2;
-
-    for (int i = 0; i < N*2; i++) {
-      press[i] = false;
-    }
-
-    int w_it = 0, b_it = 1;
-    for (int i = 0; i < N; i++){
-      //std::cout << w_it << " " << b_it << std::endl;
-      key_map_white[i] = w_it;
-      key_map_black[i] = b_it;
-      if(i%7 == 2 || i%7 == 6){
-        w_it += 1;
-      }else{
-        w_it += 2;
-      }
-
-      if(i%7 == 1 || i%7 == 5){
-        b_it += 1;
-      }else{
-        b_it += 2;
-      }
-    }
-
-    // Create a mesh that will be drawn as piano keys
-    addRect(meshKey, 0, 0, keyWidth, keyHeight);
-
-    // Set the font renderer
-    fontRender.load(Font::defaultFont().c_str(), 60, 1024);
+    //SECTION BREAK --------------------------------------------------- 
+    //Custom Piano class made by Evan Nguyen, in piano.cpp
+    pianogui.setWidth(float(width())*2);
+    pianogui.setHeight(float(height())*2);
 
     navControl().active(false);  // Disable navigation via keyboard, since we
                                  // will be using keyboard for note triggering
@@ -165,66 +116,7 @@ struct MyApp : public App {
     // This example uses only the orthogonal projection for 2D drawing
     g.camera(Viewpoint::ORTHO_FOR_2D);  // Ortho [0:width] x [0:height]
 
-    // Drawing white piano keys
-    for(int i = 0; i < N; i++) {
-      int index = i % N;
-      g.pushMatrix();
-      
-      float c = 0.9;
-      float x = (keyWidth + keyPadding * 2) * index + keyPadding;
-      float y = 0;
-
-      /**
-      if(i >= 10) {
-        y = keyHeight + keyPadding * 2;
-      }
-      **/
-
-      float modifier_press = press[key_map_white[i]] ? 1 : 0;
-
-      g.translate(x, y);
-      g.color(c + modifier_press);
-      g.tint(c);
-      g.draw(meshKey);
-      
-      g.tint(1);
-      fontRender.write(whitekeyLabels[i].c_str(), fontSize);
-      fontRender.renderAt(g, {keyWidth * 0.5 - 5, keyHeight * 0.1, 0.0});
-
-      g.popMatrix();
-    }
-
-    // Drawing black piano keys
-    for(int i = 0; i < N; i++) {
-      int index = i % N;
-      if(index%7 == 2 || index%7 == 6) continue;
-
-      g.pushMatrix();
-      
-      float c = 0.5;      
-      float x = (keyWidth + keyPadding * 2) * index + keyPadding + keyWidth * 0.5;
-      float y = keyHeight * 0.5;
-
-      /**
-      if(i >= 10) {
-        y = y + keyHeight + keyPadding * 2;
-      }
-      **/
-
-      float modifier_press = press[key_map_black[i]] ? 1 : 0;
-
-      g.translate(x, y);
-      g.scale(1, 0.5);
-      g.color(c + modifier_press);
-      g.tint(c);
-      g.draw(meshKey);
-      
-      g.scale(1, 2);
-      fontRender.write(blackkeyLabels[i].c_str(), fontSize);
-      fontRender.renderAt(g, {keyWidth * 0.5 - 5, keyHeight * 0.1, 0.0});
-      
-      g.popMatrix();
-    }
+    pianogui.draw(g);
   }
 
   // Whenever a key is pressed, this function is called
@@ -301,7 +193,7 @@ struct MyApp : public App {
       int i;
       m >> i;
 
-      press[i] = true;
+      pianogui.press[i] = true;
       synthManager.triggerOn(i);
     }
 
@@ -309,7 +201,7 @@ struct MyApp : public App {
       int i;
       m >> i;
 
-      press[i] = false;
+      pianogui.press[i] = false;
       synthManager.triggerOff(i);
     }
   }

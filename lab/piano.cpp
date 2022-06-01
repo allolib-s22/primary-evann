@@ -2,3 +2,7 @@
 
 using namespace al;
 #define N 20
+
+class Piano {
+    
+}

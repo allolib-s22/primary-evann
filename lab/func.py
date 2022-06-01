@@ -11,9 +11,8 @@ for point in mp_hands.HandLandmark:
 
 A4 = 440.0
 
-#todo: 
-#must develop a method of getting 'rays', where each limb closest to the hand goes.
-#when the tip diverges from the ray, is when the press starts
+#CREATED BY EVAN NGUYEN.
+#IF THIS APP FAILS TO DETECT YOUR PRESSES IN CONSOLE, PLEASE SEE LINE 126 IN CODE:
 
 def lineseg_dist(p, a, b):
 
@@ -124,29 +123,31 @@ def process(landmarks, handedness, client, shape):
 
           if(i == 5) or (i == 0):
             press_threshold = 4/100 #These numbers need to be heavily tweaked, or set with some 'calibration' sequence
-          else:
-            press_threshold = 10/100
+          else:                     #THIS IS THE THRESHOLD FOR PRESSING. THE LOWER, THE MORE STRICT. HIGHER VALUES MEAN MORE LIKELY TO DETECT
+            press_threshold = 10/100 #This is for the thumb. Kind of hard to detect, since it has fewer landmarks than a normal finger.
           
           if(d < press_threshold) and not pressed[str(i)]:
             pressed[str(i)] = 1
             
             A_4 = 440
             midiNote = int((1-b.x) * (80-60) + 60)
-            o = pow(2, ((midiNote - 69) / 12)) * A_4
-            print(o)
+            o = pow(2, ((midiNote - 69) / 12)) * A_4 #We do the calculation of the frequency in-home.
             #o = (600-200)*(1-b.x) + 200
 
-            note[str(i)]=midiNote-60
+            note[str(i)]=midiNote-60 #Clamp our value
 
+            #print(o)
             print(i, " pressed note ", midiNote)
+
             client.send_message("/frequency/", o)
             client.send_message("/triggerOn/", midiNote-60)
 
           elif(d >= press_threshold) and pressed[str(i)]:
             pressed[str(i)] = 0
             print(i, " released")
-            client.send_message("/triggerOff/", note[str(i)])
             print(note[str(i)])
+
+            client.send_message("/triggerOff/", note[str(i)])
 
           i += 1
 

@@ -1,0 +1,19 @@
+::3
+/amplitude f 1.000000 
+/attackTime f 0.100000 
+/bw1 f 1276.692017 
+/bw2 f 624.153992 
+/bwRise f 0.918000 
+/cf1 f 10.000000 
+/cf2 f 86.768997 
+/cfRise f 0.100000 
+/curve f 0.462000 
+/envDur f 1.000000 
+/frequency f 261.625549 
+/hmamp f 0.685000 
+/hmnum f 20.000000 
+/noise f 0.000000 
+/pan f 0.000000 
+/releaseTime f 4.060000 
+/sustain f 0.400000 
+::

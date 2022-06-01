@@ -24,7 +24,12 @@ public:
     gam::Pan<> mPan;
     gam::ADSR<> mAmpEnv;
     gam::EnvFollow<> mEnvFollow;  // envelope follower to connect audio output to graphics
+    
     gam::DSF<> mOsc;
+    gam::DSF<> mOsc3;
+    gam::DSF<> mOsc5;
+    gam::DSF<> mOsc7;
+
     gam::NoiseWhite<> mNoise;
     gam::Reson<> mRes;
     gam::Env<2> mCFEnv;
@@ -35,11 +40,15 @@ public:
     // Initialize voice. This function will nly be called once per voice
     void init() override {
         mAmpEnv.curve(0); // linear segments
-        mAmpEnv.levels(0,1.0,1.0,0); // These tables are not normalized, so scale to 0.3
+        mAmpEnv.levels(0,0.6,0.5,0); // These tables are not normalized, so scale to 0.3
         mAmpEnv.sustainPoint(2); // Make point 2 sustain until a release is issued
         mCFEnv.curve(0);
         mBWEnv.curve(0);
-        mOsc.harmonics(12);
+
+        mOsc.harmonics(12); //12
+        mOsc3.harmonics(12); 
+        mOsc5.harmonics(12); 
+        mOsc7.harmonics(12); 
         // We have the mesh be a sphere
         addDisc(mMesh, 1.0, 30);
 
@@ -71,14 +80,20 @@ public:
         float noiseMix = getInternalParameterValue("noise");
         while(io()){
             // mix oscillator with noise
-            float s1 = mOsc()*(1-noiseMix) + mNoise()*noiseMix;
+            //float s1 = mOsc()*(1-noiseMix) + mNoise()*noiseMix;
+            float s1 = mNoise()*noiseMix + (1-noiseMix)*(
+                mOsc() * amp +
+                mOsc3() * (amp/3.0) +
+                mOsc5() * (amp/5.0) + 
+                mOsc7() * (amp/7.0)
+            );
 
             // apply resonant filter
             mRes.set(mCFEnv(), mBWEnv());
             s1 = mRes(s1);
 
             // appy amplitude envelope
-            s1 *= mAmpEnv() * amp;
+            s1 *= mAmpEnv();
 
             float s2;
             mPan(s1, s1,s2);
@@ -117,9 +132,25 @@ public:
     }
 
     void updateFromParameters() {
-        mOsc.freq(getInternalParameterValue("frequency"));
-        mOsc.harmonics(getInternalParameterValue("hmnum"));
-        mOsc.ampRatio(getInternalParameterValue("hmamp"));
+        float f = getInternalParameterValue("frequency");
+        mOsc.freq(f);
+        mOsc3.freq(f*3);
+        mOsc5.freq(f*5);
+        mOsc7.freq(f*7);
+
+        //mOsc.harmonics(getInternalParameterValue("hmnum"));
+        //mOsc.ampRatio(getInternalParameterValue("hmamp"));
+        /**
+        mOsc3.harmonics(getInternalParameterValue("hmnum"));
+        mOsc3.ampRatio(getInternalParameterValue("hmamp"));
+
+        mOsc5.harmonics(getInternalParameterValue("hmnum"));
+        mOsc5.ampRatio(getInternalParameterValue("hmamp"));
+
+        mOsc7.harmonics(getInternalParameterValue("hmnum"));
+        mOsc7.ampRatio(getInternalParameterValue("hmamp"));
+        **/
+
         mAmpEnv.attack(getInternalParameterValue("attackTime"));
     //    mAmpEnv.decay(getInternalParameterValue("attackTime"));
         mAmpEnv.release(getInternalParameterValue("releaseTime"));
@@ -199,7 +230,7 @@ public:
         int midiNote = asciiToMIDI(k.key());
         if (midiNote > 0) {
             synthManager.voice()->setInternalParameterValue(
-                "frequency", ::pow(2.f, (midiNote - 69.f) / 12.f) * 432.f);
+                "frequency", ::pow(2.f, (midiNote - 69.f) / 12.f) * 440.f);
             synthManager.triggerOn(midiNote);
         }
         }

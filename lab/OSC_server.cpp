@@ -28,7 +28,8 @@ Lance Putnam, Oct. 2014
 
 #include "al/graphics/al_Font.hpp"
 
-#include "SineEnv.cpp"
+//#include "SineEnv.cpp"
+#include "SubSyn.cpp"
 #include "piano.hpp"
 
 using namespace al;
@@ -37,8 +38,10 @@ using namespace al;
 struct MyApp : public App {
 
 
-  SynthGUIManager<SineEnv> synthManager{"SineEnv"};
+  //SynthGUIManager<SineEnv> synthManager{"SineEnv"};
+  SynthGUIManager<Sub> synthManager{"synth8"};
   Piano pianogui = Piano(20);
+  int OFFSET = 48;
 
 
   // can give params in ctor
@@ -76,8 +79,8 @@ struct MyApp : public App {
 
     //SECTION BREAK --------------------------------------------------- 
     //Custom Piano class made by Evan Nguyen, in piano.cpp
-    pianogui.setWidth(float(width())*2);
-    pianogui.setHeight(float(height())*2);
+    pianogui.setWidth(float(width())*1.5);
+    pianogui.setHeight(float(height())*1.5);
 
     navControl().active(false);  // Disable navigation via keyboard, since we
                                  // will be using keyboard for note triggering
@@ -139,6 +142,8 @@ struct MyApp : public App {
         synthManager.voice()->setInternalParameterValue(
             "frequency", ::pow(2.f, (midiNote - 69.f) / 12.f) * A4);
         synthManager.triggerOn(midiNote);
+        pianogui.press[midiNote-OFFSET] = true;
+        pianogui.decay[midiNote-OFFSET] = 1;
       }
     }
     return true;
@@ -149,6 +154,7 @@ struct MyApp : public App {
     int midiNote = asciiToMIDI(k.key());
     if (midiNote > 0) {
       synthManager.triggerOff(midiNote);
+      pianogui.decay[midiNote-OFFSET] = 0.95;
     }
     return true;
   }
@@ -193,7 +199,8 @@ struct MyApp : public App {
       int i;
       m >> i;
 
-      pianogui.press[i] = true;
+      pianogui.press[i-OFFSET] = true;
+      pianogui.decay[i-OFFSET] = 1;
       synthManager.triggerOn(i);
     }
 
@@ -201,8 +208,16 @@ struct MyApp : public App {
       int i;
       m >> i;
 
-      pianogui.press[i] = false;
+      pianogui.decay[i-OFFSET] = 0.95;
       synthManager.triggerOff(i);
+    }
+
+    if(m.addressPattern() == "/hoverOn/"){
+      int i;
+      m >> i;
+
+      pianogui.press[i-OFFSET] = -0.4;
+      pianogui.decay[i-OFFSET] = 0.95;
     }
   }
 };

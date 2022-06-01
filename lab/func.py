@@ -5,16 +5,24 @@ mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_hands = mp.solutions.hands
 
+import math
+
 finger_denote = []
 for point in mp_hands.HandLandmark:
   finger_denote.append(point)
 
 key_map_w = [0, 2, 4, 5, 7, 9, 11]
-key_map_b = [1, 3, 6, 8, 10]
-octL = 24
+key_map_b = [1, 3, -1, 6, 8, 10, -1]
 
 #CREATED BY EVAN NGUYEN.
 #IF THIS APP FAILS TO DETECT YOUR PRESSES IN CONSOLE, PLEASE SEE LINE 126 IN CODE:
+#PRESETS FOLLOW
+
+A_4 = 440
+octL = 12 + (3*12) #Lowest C position possible, usually multiples of 12 from 24.
+SPAN = 7 * 2 #SPAN IN WHITE KEYS, so usually a multiple of 7.
+MODE = 0 #1 for chords (for now)
+
 
 def lineseg_dist(p, a, b):
 
@@ -83,6 +91,7 @@ detecting = False
 def process(landmarks, handedness, client, shape):
   fact = round(shape[0]/shape[1], 2)
   halfway = shape[1]/2
+  width = shape[0]
 
   global detecting
   confidence = 0
@@ -125,35 +134,46 @@ def process(landmarks, handedness, client, shape):
           d = abs(np.linalg.norm(vect(a, scale_y=fact, weight_z=1)-vect(b, scale_y=fact, weight_z=1))-np.linalg.norm(vect(a, scale_y=fact, weight_z=1)-vect(c, scale_y=fact, weight_z=1))) 
 
           if(i == 5) or (i == 0):
-            press_threshold = 4/100 #These numbers need to be heavily tweaked, or set with some 'calibration' sequence
+            press_threshold = 5/100 #These numbers need to be heavily tweaked, or set with some 'calibration' sequence
           else:                     #THIS IS THE THRESHOLD FOR PRESSING. THE LOWER, THE MORE STRICT. HIGHER VALUES MEAN MORE LIKELY TO DETECT
             press_threshold = 10/100 #This is for the thumb. Kind of hard to detect, since it has fewer landmarks than a normal finger.
           
-          if(d < press_threshold) and not pressed[str(i)]:
+          if(d < press_threshold) and not pressed[str(i)]:  
+    
+            #MAIN MODIFICATION OF MIDI NOTE HERE.
+            #midiNote = int((1-b.x) * (80-60) + 60)
+
+            pos = math.ceil((1-b.x) * SPAN)
+            print(pos)
             pressed[str(i)] = 1
-            
-            A_4 = 440
-            midiNote = int((1-b.x) * (80-60) + 60)
+
+            if(b.y <= 0.5): #Select black notes
+              if(key_map_b[pos % 7]) != -1:
+                midiNote = octL + key_map_b[pos % 7] + 12 * (pos // 7)
+            else:
+              midiNote = octL + key_map_w[pos % 7] + 12 * (pos // 7)
 
 
-            o = pow(2, ((midiNote - 69) / 12)) * A_4 #We do the calculation of the frequency in-home.
-            #o = (600-200)*(1-b.x) + 200
+            if(key_map_b[pos % 7]) != -1 or b.y > 0.5:
+              o = pow(2, ((midiNote - 69) / 12)) * A_4 #We don't need to do the calculation here, but since the other end is a 'server', we want to reduce its features.
+              #o = (600-200)*(1-b.x) + 200
 
-            note[str(i)]=midiNote-55 #Clamp our value
+              #midiNote = max(midiNote, octL)
+              note[str(i)]=midiNote #Clamp our value
 
-            #print(o)
-            print(i, " pressed note ", midiNote)
+              print("trigger:", note[str(i)])
+              print(i, " pressed note ", midiNote)
 
-            client.send_message("/frequency/", o)
-            client.send_message("/triggerOn/", note[str(i)])
+              client.send_message("/frequency/", o)
+              client.send_message("/triggerOn/", note[str(i)])
 
           elif(d >= press_threshold) and pressed[str(i)]:
             pressed[str(i)] = 0
             print(i, " released")
-            print(note[str(i)])
+            #print(note[str(i)])
 
             client.send_message("/triggerOff/", note[str(i)])
-
+  
           i += 1
 
         l += 1

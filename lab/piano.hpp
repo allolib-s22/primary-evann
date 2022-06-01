@@ -9,48 +9,16 @@
 #include "al/ui/al_Parameter.hpp"
 
 #include "al/graphics/al_Font.hpp"
+#include "chords.hpp"
 
-#include <iostream>
-#include <unordered_map>
 #include <string>
-#include <string.h>
-#include <unordered_set>
 #include <vector>
-#include <fstream>
-#include <sstream>
-#include <algorithm>
 
 using namespace al;
 using namespace std;
 
 class Piano {
     public:
-        vector<string> allChords = {"I", "ii", "iii", "IV", "V", "vi", "viid", "I6", "ii6", "iii6", "IV6", "V6", "vi6", "viid6", "I64", "ii64", "iii64", "IV64", "V64", "vi64", "viid64"};
-  unordered_map< string, vector<string> > major = 
-    {
-      {"I", vector<string>({"I", "ii", "iii", "IV", "V", "vi", "viid", "I6", "ii6", "iii6", "IV6", "V6", "vi6", "viid6", "I64", "ii64", "iii64", "IV64", "V64", "vi64", "viid64"})},
-      {"I6", vector<string>({"I", "ii", "iii", "IV", "V", "vi", "viid", "I6", "ii6", "iii6", "IV6", "V6", "vi6", "viid6", "I64", "ii64", "iii64", "IV64", "V64", "vi64", "viid64"})},
-      {"I64", vector<string>({"I", "ii", "iii", "IV", "V", "vi", "viid", "I6", "ii6", "iii6", "IV6", "V6", "vi6", "viid6", "I64", "ii64", "iii64", "IV64", "V64", "vi64", "viid64"})},
-      {"ii", vector<string>({"I", "V", "viid", "I6", "V6", "viid6", "I64", "V64", "vii64"})},
-      {"ii6", vector<string>({"I", "V", "viid", "I6", "V6", "viid6", "I64", "V64", "vii64"})},
-      {"ii64", vector<string>({"I", "V", "viid", "I6", "V6", "viid6", "I64", "V64", "vii64"})},
-      {"iii", vector<string>({"I", "ii", "IV", "vi", "I6", "ii6", "IV6", "vi6", "I64", "ii64", "IV64", "vi64"})},
-      {"iii6", vector<string>({"I", "ii", "IV", "vi", "I6", "ii6", "IV6", "vi6", "I64", "ii64", "IV64", "vi64"})},
-      {"iii64", vector<string>({"I", "ii", "IV", "vi", "I6", "ii6", "IV6", "vi6", "I64", "ii64", "IV64", "vi64"})},
-      {"IV", vector<string>({"I", "ii", "iii", "V", "viid", "I6", "ii6", "iii6", "V6", "viid6", "I64", "ii64", "iii64", "V64", "viid64"})},
-      {"IV6", vector<string>({"I", "ii", "iii", "V", "viid", "I6", "ii6", "iii6", "V6", "viid6", "I64", "ii64", "iii64", "V64", "viid64"})},
-      {"IV64", vector<string>({"I", "ii", "iii", "V", "viid", "I6", "ii6", "iii6", "V6", "viid6", "I64", "ii64", "iii64", "V64", "viid64"})},
-      {"V", vector<string>({"I", "vi", "I6", "vi6", "I64", "vi64"})},
-      {"V6", vector<string>({"I", "vi", "I6", "vi6", "I64", "vi64"})},
-      {"V64", vector<string>({"I", "vi", "I6", "vi6", "I64", "vi64"})},
-      {"vi", vector<string>({"I", "ii", "iii", "IV", "V", "I6", "ii6", "iii6", "IV6", "V6", "I64", "ii64", "iii64", "IV64", "V64"})},
-      {"vi6", vector<string>({"I", "ii", "iii", "IV", "V", "I6", "ii6", "iii6", "IV6", "V6", "I64", "ii64", "iii64", "IV64", "V64"})},
-      {"vi64", vector<string>({"I", "ii", "iii", "IV", "V", "I6", "ii6", "iii6", "IV6", "V6", "I64", "ii64", "iii64", "IV64", "V64"})},
-      {"viid", vector<string>({"I", "iii", "I6", "iii6", "I64", "iii64"})},
-      {"viid6", vector<string>({"I", "iii", "I6", "iii6", "I64", "iii64"})},
-      {"viid64", vector<string>({"I", "iii", "I6", "iii6", "I64", "iii64"})}   
-    };
-        
         // Mesh and variables for drawing piano keys
         Mesh meshKey;
         float keyWidth, keyHeight;
@@ -60,12 +28,15 @@ class Piano {
         int N;
         float screenWidth, screenHeight;
         
-        bool* press; // key down
+        float* press; // key down
+        float* decay;
         int* key_map_black;
         int* key_map_white;
 
         // Font renderer
         //FontRenderer fontRender;
+
+        vector<string> valid_progressions;
 
         Piano::Piano(){
             N = 1;
@@ -96,6 +67,7 @@ class Piano {
 
         Piano::~Piano(){
             delete[] press;
+            delete[] decay;
             delete[] key_map_black;
             delete[] key_map_white;
         }
@@ -111,9 +83,10 @@ class Piano {
         }
 
         void Piano::selfInit(){
-            press = new bool[1024];
-            key_map_black = new int[1024];
-            key_map_white = new int[1024];
+            press = new float[112];
+            decay = new float[112];
+            key_map_black = new int[112];
+            key_map_white = new int[112];
 
             float w = screenWidth;
             float h = screenHeight;
@@ -121,8 +94,9 @@ class Piano {
             keyHeight = h / 2.f - keyPadding * 2.f;
             //fontSize = keyWidth * 0.2;
 
-            for (int i = 0; i < 1024; i++) {
-                press[i] = false;
+            for (int i = 0; i < 112; i++) {
+                press[i] = 0;
+                decay[i] = 1;
             }
 
             int w_it = 0, b_it = 1;
@@ -151,6 +125,13 @@ class Piano {
         }
         
         void Piano::draw(Graphics& g){
+            for (int i = 0; i < 112; i++) {
+                if(abs(press[i]) < 0.05){
+                    press[i] = 0;
+                }else{
+                    press[i] *= decay[i];
+                }
+            }
             // Drawing white piano keys
             for(int i = 0; i < N; i++) {
                 int index = i % N;
@@ -166,7 +147,7 @@ class Piano {
                 }
                 **/
 
-                float modifier_press = press[key_map_white[i]] ? 1 : 0;
+                float modifier_press = press[key_map_white[i]];
 
                 g.translate(x, y);
                 g.color(c + modifier_press);
@@ -197,7 +178,7 @@ class Piano {
                 }
                 **/
 
-                float modifier_press = press[key_map_black[i]] ? 1 : 0;
+                float modifier_press = press[key_map_black[i]];
 
                 g.translate(x, y);
                 g.scale(1, 0.5);
@@ -212,6 +193,12 @@ class Piano {
                 g.popMatrix();
             }
         }
+
+        void next_valid_progression(){
+            
+        }
+
+
 };
 
 #endif

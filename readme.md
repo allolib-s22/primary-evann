@@ -1,4 +1,4 @@
-## Allolib playground & Evan Nguyen S22
+## Allolib playground - Evan Nguyen S22
 [![Build Status](https://travis-ci.org/AlloSphere-Research-Group/allolib_playground.svg?branch=master)](https://travis-ci.org/AlloSphere-Research-Group/allolib_playground)
 
 Please see the original repository, found here: https://github.com/AlloSphere-Research-Group/allolib_playground

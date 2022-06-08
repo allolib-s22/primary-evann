@@ -1,5 +1,5 @@
 # This is the main folder for all my work in S22.
-The hand-tracking client supports two modes, one that allows normal presses with all the main fingers (thumb is still buggy), and a mode that has automatic chord progression detection, based on the position of the index finger and the middle key of the chord. The solution is made by google, and I used the landmark data that it outputs, which you can see here: https://google.github.io/mediapipe/solutions/hands.html.
+The hand-tracking client supports two modes, one that allows normal presses with all the main fingers (thumb is still buggy), and a mode that has automatic chord progression detection, based on the position of the index finger and the middle key of the chord. The solution is made by google, and I used the landmark data that it outputs, which you can see here: https://google.github.io/mediapipe/solutions/hands.html (Fig 2.21 hand landmarks).
 
 <img src="https://cdn.discordapp.com/attachments/599549030707625985/983985858401148988/unknown.png" width=50% height=50%>
 <img src="https://cdn.discordapp.com/attachments/599549030707625985/983986413383061514/unknown.png" width=50% height=50%>

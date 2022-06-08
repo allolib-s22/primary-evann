@@ -14,8 +14,6 @@ Lance Putnam, Oct. 2014
 
 #include <cstdio>  // for printing to stdout
 
-#include "SineEnv.cpp"
-
 #include "Gamma/Analysis.h"
 #include "Gamma/Effects.h"
 #include "Gamma/Envelope.h"
@@ -28,13 +26,23 @@ Lance Putnam, Oct. 2014
 #include "al/ui/al_ControlGUI.hpp"
 #include "al/ui/al_Parameter.hpp"
 
+#include "al/graphics/al_Font.hpp"
+
+//#include "SineEnv.cpp"
+#include "SubSyn.cpp"
+#include "piano.hpp"
+
 using namespace al;
 
 // App has osc::PacketHandler as base class
 struct MyApp : public App {
 
 
-  SynthGUIManager<SineEnv> synthManager{"SineEnv"};
+  //SynthGUIManager<SineEnv> synthManager{"SineEnv"};
+  SynthGUIManager<Sub> synthManager{"synth8"};
+  Piano pianogui = Piano(7*3); //There are 7 white keys in a set, 7 white + 5 black = 12 total.
+  int OFFSET = 48; //This specifies which octave we want to start from
+                  //Should also be the same value as from main_client.py's preset.
 
 
   // can give params in ctor
@@ -50,6 +58,7 @@ struct MyApp : public App {
   the server checks for new data on the on the port. You will	want to tune
   this to rate at which the client is sending packets.*/
   // :	server(16447, "", 0.05)
+
   void onCreate() override {
     // Print out our IP address
     // std::cout << "SERVER: My IP is " << Socket::hostIP() << "\n";
@@ -69,9 +78,10 @@ struct MyApp : public App {
 
     
 
-    //SECTION BREAK ---------------------------------------------------
-
-
+    //SECTION BREAK --------------------------------------------------- 
+    //Custom Piano class made by Evan Nguyen, in piano.cpp
+    pianogui.setWidth(float(width())*1.5);
+    pianogui.setHeight(float(height())*1.5);
 
     navControl().active(false);  // Disable navigation via keyboard, since we
                                  // will be using keyboard for note triggering
@@ -104,9 +114,13 @@ struct MyApp : public App {
     g.clear();
     // Render the synth's graphics
     synthManager.render(g);
-
     // GUI is drawn here
     imguiDraw();
+
+    // This example uses only the orthogonal projection for 2D drawing
+    g.camera(Viewpoint::ORTHO_FOR_2D);  // Ortho [0:width] x [0:height]
+
+    pianogui.draw(g);
   }
 
   // Whenever a key is pressed, this function is called
@@ -129,6 +143,7 @@ struct MyApp : public App {
         synthManager.voice()->setInternalParameterValue(
             "frequency", ::pow(2.f, (midiNote - 69.f) / 12.f) * A4);
         synthManager.triggerOn(midiNote);
+        pianogui.keyDown(midiNote-OFFSET);
       }
     }
     return true;
@@ -139,6 +154,7 @@ struct MyApp : public App {
     int midiNote = asciiToMIDI(k.key());
     if (midiNote > 0) {
       synthManager.triggerOff(midiNote);
+      pianogui.keyUp(midiNote-OFFSET);
     }
     return true;
   }
@@ -183,6 +199,7 @@ struct MyApp : public App {
       int i;
       m >> i;
 
+      pianogui.keyDown(i-OFFSET);
       synthManager.triggerOn(i);
     }
 
@@ -190,8 +207,34 @@ struct MyApp : public App {
       int i;
       m >> i;
 
+      pianogui.keyUp(i-OFFSET);
       synthManager.triggerOff(i);
     }
+
+    if(m.addressPattern() == "/hoverOn/"){
+      int i;
+      m >> i;
+
+      pianogui.keyDown(i-OFFSET, -0.4); 
+    }
+
+    if(m.addressPattern() == "/hoverOff/"){
+      int i;
+      m >> i;
+
+      pianogui.keyUp(i-OFFSET, 0.5); 
+    }
+
+
+    if(m.addressPattern() == "/noteColor/"){
+      int i; 
+      float d;
+      m >> i >> d;
+
+      pianogui.keyDown(i-OFFSET, 1, d);
+    }
+
+
   }
 };
 

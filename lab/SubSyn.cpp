@@ -52,22 +52,22 @@ public:
         // We have the mesh be a sphere
         addDisc(mMesh, 1.0, 30);
 
-        createInternalTriggerParameter("amplitude", 0.3, 0.0, 1.0);
+        createInternalTriggerParameter("amplitude", 1.0, 0.0, 1.0);
         createInternalTriggerParameter("frequency", 60, 20, 5000);
         createInternalTriggerParameter("attackTime", 0.1, 0.01, 3.0);
-        createInternalTriggerParameter("releaseTime", 3.0, 0.1, 10.0);
-        createInternalTriggerParameter("sustain", 0.7, 0.0, 1.0);
+        createInternalTriggerParameter("releaseTime", 4.0, 0.1, 10.0);
+        createInternalTriggerParameter("sustain", 0.4, 0.0, 1.0);
         createInternalTriggerParameter("curve", 4.0, -10.0, 10.0);
         createInternalTriggerParameter("noise", 0.0, 0.0, 1.0);
         createInternalTriggerParameter("envDur",1, 0.0, 5.0);
-        createInternalTriggerParameter("cf1", 400.0, 10.0, 5000);
-        createInternalTriggerParameter("cf2", 400.0, 10.0, 5000);
-        createInternalTriggerParameter("cfRise", 0.5, 0.1, 2);
-        createInternalTriggerParameter("bw1", 700.0, 10.0, 5000);
-        createInternalTriggerParameter("bw2", 900.0, 10.0, 5000);
-        createInternalTriggerParameter("bwRise", 0.5, 0.1, 2);
-        createInternalTriggerParameter("hmnum", 12.0, 5.0, 20.0);
-        createInternalTriggerParameter("hmamp", 1.0, 0.0, 1.0);
+        createInternalTriggerParameter("cf1", 10.0, 10.0, 5000);
+        createInternalTriggerParameter("cf2", 50.0, 10.0, 5000);
+        createInternalTriggerParameter("cfRise", 0.1, 0.1, 2);
+        createInternalTriggerParameter("bw1", 1200.0, 10.0, 5000);
+        createInternalTriggerParameter("bw2", 600.0, 10.0, 5000);
+        createInternalTriggerParameter("bwRise", 0.9, 0.1, 2);
+        createInternalTriggerParameter("hmnum", 5, 5.0, 20.0);
+        createInternalTriggerParameter("hmamp", 0.68, 0.0, 1.0);
         createInternalTriggerParameter("pan", 0.0, -1.0, 1.0);
 
     }
@@ -178,81 +178,3 @@ public:
 };
 
 
-
-class MyApp : public App
-{
-public:
-  SynthGUIManager<Sub> synthManager {"synth8"};
-  //    ParameterMIDI parameterMIDI;
-
-  virtual void onInit( ) override {
-    imguiInit();
-    navControl().active(false);  // Disable navigation via keyboard, since we
-                              // will be using keyboard for note triggering
-    // Set sampling rate for Gamma objects from app's audio
-    gam::sampleRate(audioIO().framesPerSecond());
-  }
-
-    void onCreate() override {
-        // Play example sequence. Comment this line to start from scratch
-        //    synthManager.synthSequencer().playSequence("synth8.synthSequence");
-        synthManager.synthRecorder().verbose(true);
-    }
-
-    void onSound(AudioIOData& io) override {
-        synthManager.render(io);  // Render audio
-    }
-
-    void onAnimate(double dt) override {
-        imguiBeginFrame();
-        synthManager.drawSynthControlPanel();
-        imguiEndFrame();
-    }
-
-    void onDraw(Graphics& g) override {
-        g.clear();
-        synthManager.render(g);
-
-        // Draw GUI
-        imguiDraw();
-    }
-
-    bool onKeyDown(Keyboard const& k) override {
-        if (ParameterGUI::usingKeyboard()) {  // Ignore keys if GUI is using them
-        return true;
-        }
-        if (k.shift()) {
-        // If shift pressed then keyboard sets preset
-        int presetNumber = asciiToIndex(k.key());
-        synthManager.recallPreset(presetNumber);
-        } else {
-        // Otherwise trigger note for polyphonic synth
-        int midiNote = asciiToMIDI(k.key());
-        if (midiNote > 0) {
-            synthManager.voice()->setInternalParameterValue(
-                "frequency", ::pow(2.f, (midiNote - 69.f) / 12.f) * 440.f);
-            synthManager.triggerOn(midiNote);
-        }
-        }
-        return true;
-    }
-
-    bool onKeyUp(Keyboard const& k) override {
-        int midiNote = asciiToMIDI(k.key());
-        if (midiNote > 0) {
-        synthManager.triggerOff(midiNote);
-        }
-        return true;
-    }
-
-  void onExit() override { imguiShutdown(); }
-};
-
-int main() {
-  MyApp app;
-
-  // Set up audio
-  app.configureAudio(48000., 512, 2, 0);
-
-  app.start();
-}

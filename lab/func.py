@@ -1,3 +1,14 @@
+#CREATED BY EVAN NGUYEN.
+#THIS APP WORKS BEST BY SEEING YOUR ENTIRE PALM; FOR BEST RESULTS, FACE HANDS PERPENDICULAR TO CAMERA, SUCH THAT YOUR FINGERS POINT VERTICAL. 
+
+#Instructions----------------------------------------
+#The way this code works is to extract 'landmarks' from hand positions, the diagram of which you should consult on my github repo.
+#We deem that a finger is 'pressed', when the tip of a finger and its knuckle are the same distance to your palm - if you press the way I do.
+#Try making this shape, it looks like a question mark or a hook of sorts.
+
+#IF THIS APP FAILS TO DETECT YOUR PRESSES IN CONSOLE, PLEASE SEE THE press_threshold VALUE BELOW
+#PRESETS FOLLOW
+
 import numpy as np
 
 import mediapipe as mp
@@ -6,6 +17,8 @@ mp_drawing_styles = mp.solutions.drawing_styles
 mp_hands = mp.solutions.hands
 
 import math
+import random
+from chords import *
 
 finger_denote = []
 for point in mp_hands.HandLandmark:
@@ -14,15 +27,26 @@ for point in mp_hands.HandLandmark:
 key_map_w = [0, 2, 4, 5, 7, 9, 11]
 key_map_b = [1, 3, -1, 6, 8, 10, -1]
 
-#CREATED BY EVAN NGUYEN.
-#IF THIS APP FAILS TO DETECT YOUR PRESSES IN CONSOLE, PLEASE SEE LINE 126 IN CODE:
-#PRESETS FOLLOW
+#---PRESETS-------------------------------------------------------------------------------------
+#THIS IS THE THRESHOLD FOR PRESSING. THE LOWER, THE MORE STRICT. HIGHER VALUES MEAN MORE LIKELY TO DETECT
+press_threshold_finger = 5/100  #These numbers need to be heavily tweaked, or set with some 'calibration' sequence
+press_threshold_thumb = 10/100  #This is for the thumb. Kind of hard to detect, since it has fewer landmarks than a normal finger.
 
 A_4 = 440
-octL = 12 + (3*12) #Lowest C position possible, usually multiples of 12 from 24.
+octL = 12 + (3*12) #Lowest C position possible, usually multiples of 12 from 24.  
+                   #Here, it is in the 48'th position, or the fourth octave.
 SPAN = 7 * 2 #SPAN IN WHITE KEYS, so usually a multiple of 7.
-MODE = 0 #1 for chords (for now)
+             #This value corresponds to how many 'white-key' lengths the window screen will support. 
+             #In this case, the entire width of the screen maps to 14 keys. 
+             #Shouldn't really be higher than 20.
+MODE = 1 #1 for chords on the left hand (for now)
 
+#For chord mode
+last_played_chord = "I"
+next_chord_options = get_next_set(last_played_chord) #Start in root position
+chord_selector_index = 0
+
+#---FUNCTIONS-----------------------------------------------------------------------------------
 
 def lineseg_dist(p, a, b):
 
@@ -76,17 +100,20 @@ for f in fingers:
 print(segDist)
 '''
 
-
-
 fingers = [[4, 2], [8, 5], [12, 9], [16, 13], [20, 17]]
 
 pressed = {}
 note = {}
+chord_playing = {}
 for x in range(0, len(fingers)*2):
   pressed[str(x)] = 0
   note[str(x)] = 0
+  chord_playing[str(x)] = []
 
 detecting = False
+current_hover_note = octL
+temp_chord_buffer = []
+hover_chord = "I"
 
 def process(landmarks, handedness, client, shape):
   fact = round(shape[0]/shape[1], 2)
@@ -94,6 +121,15 @@ def process(landmarks, handedness, client, shape):
   width = shape[0]
 
   global detecting
+
+  global current_hover_note
+  global last_played_chord
+  global chord_selector_index
+
+  global temp_chord_buffer
+  global chord_playing
+  global hover_chord 
+
   confidence = 0
 
   if not detecting and landmarks:
@@ -105,6 +141,13 @@ def process(landmarks, handedness, client, shape):
 
     detecting = False
     print(detecting)
+
+    #client.send_message("/hoverOff/", current_hover_note)
+    #for n in range(0, len(temp_chord_buffer)):
+    #  client.send_message("/hoverOff/", n)
+
+    for l in range(0, SPAN):
+      client.send_message("/hoverOff/", l+octL)
 
     for x in range(0, len(fingers)*2):
       pressed[str(x)] = 0
@@ -134,54 +177,125 @@ def process(landmarks, handedness, client, shape):
           d = abs(np.linalg.norm(vect(a, scale_y=fact, weight_z=1)-vect(b, scale_y=fact, weight_z=1))-np.linalg.norm(vect(a, scale_y=fact, weight_z=1)-vect(c, scale_y=fact, weight_z=1))) 
 
           if(i == 5) or (i == 0):
-            press_threshold = 5/100 #These numbers need to be heavily tweaked, or set with some 'calibration' sequence
-          else:                     #THIS IS THE THRESHOLD FOR PRESSING. THE LOWER, THE MORE STRICT. HIGHER VALUES MEAN MORE LIKELY TO DETECT
-            press_threshold = 10/100 #This is for the thumb. Kind of hard to detect, since it has fewer landmarks than a normal finger.
-          
-          if(d < press_threshold) and not pressed[str(i)]:  
-    
-            #MAIN MODIFICATION OF MIDI NOTE HERE.
-            #midiNote = int((1-b.x) * (80-60) + 60)
+            press_threshold = press_threshold_finger 
+          else:                    
+            press_threshold = press_threshold_thumb 
 
+          if MODE and h[l] and i == 2:
             pos = math.ceil((1-b.x) * SPAN)
-            print(pos)
-            pressed[str(i)] = 1
-
             if(b.y <= 0.5): #Select black notes
               if(key_map_b[pos % 7]) != -1:
                 midiNote = octL + key_map_b[pos % 7] + 12 * (pos // 7)
-            else:
+            else: #Select white notes
               midiNote = octL + key_map_w[pos % 7] + 12 * (pos // 7)
 
+            if(key_map_b[pos % 7] != -1 and current_hover_note != midiNote):
+              if(str(midiNote % 12) in ascii_map.keys()):
+                character = ascii_map[str(midiNote % 12)]
+                if(character in next_chord_options.keys()):
+                  hover_chord = next_chord_options[character][chord_selector_index]
+                  chord_notes = chordToNotes(hover_chord)
+                  c = random.random()
+                  
+                  for pr in temp_chord_buffer:
+                    client.send_message("/hoverOff/", pr)
+                  temp_chord_buffer = []
 
-            if(key_map_b[pos % 7]) != -1 or b.y > 0.5:
-              o = pow(2, ((midiNote - 69) / 12)) * A_4 #We don't need to do the calculation here, but since the other end is a 'server', we want to reduce its features.
-              #o = (600-200)*(1-b.x) + 200
+                  client.send_message("/hoverOff/", current_hover_note)
+                  current_hover_note = midiNote
+                  print("hovering ", current_hover_note)
 
-              #midiNote = max(midiNote, octL)
-              note[str(i)]=midiNote #Clamp our value
-
-              print("trigger:", note[str(i)])
-              print(i, " pressed note ", midiNote)
-
-              client.send_message("/frequency/", o)
-              client.send_message("/triggerOn/", note[str(i)])
+                  for n in chord_notes:
+                    v = note_map[n] + midiNote - (midiNote % 12)
+                    temp_chord_buffer.append(v)
+                    client.send_message("/noteColor/", [v, c])
+              else:
+                client.send_message("/hoverOff/", current_hover_note)
+                
+                for pr in temp_chord_buffer:
+                    client.send_message("/hoverOff/", pr)
+                temp_chord_buffer = []
+                current_hover_note = midiNote
+                client.send_message("/hoverOn/", midiNote)
+          
+          if(d < press_threshold) and not pressed[str(i)]:  
+    
+            if MODE and h[l] and i == 2:
+              #test = 1
+              chord_press_handler(client, temp_chord_buffer, i)
+            elif i > len(fingers):
+              normal_gesture_press_handler(client, i, b)
 
           elif(d >= press_threshold) and pressed[str(i)]:
             pressed[str(i)] = 0
             print(i, " released")
-            #print(note[str(i)])
 
-            client.send_message("/triggerOff/", note[str(i)])
+            if MODE and h[l] and i == 2:
+              #test = 1
+              chord_lift_handler(client, i)
+            elif i > len(fingers):
+              normal_gesture_lift_handler(client, i)
   
           i += 1
 
         l += 1
     
 
+def normal_gesture_press_handler(client, i, b):
+  #MAIN MODIFICATION OF MIDI NOTE HERE.
+  #midiNote = int((1-b.x) * (80-60) + 60)
+
+  pos = math.ceil((1-b.x) * SPAN)
+  pressed[str(i)] = 1
+
+  if(b.y <= 0.5): #Select black notes
+    if(key_map_b[pos % 7]) != -1:
+      midiNote = octL + key_map_b[pos % 7] + 12 * (pos // 7)
+  else: #Select white notes
+    midiNote = octL + key_map_w[pos % 7] + 12 * (pos // 7)
 
 
+  if(key_map_b[pos % 7]) != -1 or b.y > 0.5:
+    o = pow(2, ((midiNote - 69) / 12)) * A_4 #We don't need to do the calculation here, but since the other end is a 'server', we want to reduce its features.
+    #o = (600-200)*(1-b.x) + 200
 
+    #midiNote = max(midiNote, octL)
+    note[str(i)]=midiNote #Clamp our value
 
-      
-      
+    print(i, " pressed note ", midiNote)
+
+    client.send_message("/frequency/", o)
+    client.send_message("/triggerOn/", note[str(i)])
+
+def normal_gesture_lift_handler(client, i):
+  client.send_message("/triggerOff/", note[str(i)])
+
+def chord_press_handler(client, noteList, i):
+  last_played_chord = hover_chord
+  print("played ", last_played_chord)
+  next_chord_options = get_next_set(last_played_chord)
+
+  chord_playing[str(i)] = noteList
+  pressed[str(i)] = 1
+  for n in chord_playing[str(i)]:
+    o = pow(2, ((n - 69) / 12)) * A_4
+    client.send_message("/frequency/", o)
+    client.send_message("/triggerOn/", n)
+
+def chord_lift_handler(client, i):
+  for n in chord_playing[str(i)]:
+    client.send_message("/triggerOff/", n)
+
+'''Deprecated. Merged into the process function.
+def chord_gesture_hover_handler(client, b):
+  pos = math.ceil((1-b.x) * SPAN)
+  if(b.y <= 0.5): #Select black notes
+    if(key_map_b[pos % 7]) != -1:
+      midiNote = octL + key_map_b[pos % 7] + 12 * (pos // 7)
+  else: #Select white notes
+    midiNote = octL + key_map_w[pos % 7] + 12 * (pos // 7)
+
+  if current_hover_note != midiNote:
+    current_hover_note = midiNote
+    client.send_message("/hoverOn/", midiNote)
+'''

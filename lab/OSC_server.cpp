@@ -40,8 +40,9 @@ struct MyApp : public App {
 
   //SynthGUIManager<SineEnv> synthManager{"SineEnv"};
   SynthGUIManager<Sub> synthManager{"synth8"};
-  Piano pianogui = Piano(20);
-  int OFFSET = 48;
+  Piano pianogui = Piano(7*3); //There are 7 white keys in a set, 7 white + 5 black = 12 total.
+  int OFFSET = 48; //This specifies which octave we want to start from
+                  //Should also be the same value as from main_client.py's preset.
 
 
   // can give params in ctor
@@ -142,8 +143,7 @@ struct MyApp : public App {
         synthManager.voice()->setInternalParameterValue(
             "frequency", ::pow(2.f, (midiNote - 69.f) / 12.f) * A4);
         synthManager.triggerOn(midiNote);
-        pianogui.press[midiNote-OFFSET] = true;
-        pianogui.decay[midiNote-OFFSET] = 1;
+        pianogui.keyDown(midiNote-OFFSET);
       }
     }
     return true;
@@ -154,7 +154,7 @@ struct MyApp : public App {
     int midiNote = asciiToMIDI(k.key());
     if (midiNote > 0) {
       synthManager.triggerOff(midiNote);
-      pianogui.decay[midiNote-OFFSET] = 0.95;
+      pianogui.keyUp(midiNote-OFFSET);
     }
     return true;
   }
@@ -199,8 +199,7 @@ struct MyApp : public App {
       int i;
       m >> i;
 
-      pianogui.press[i-OFFSET] = true;
-      pianogui.decay[i-OFFSET] = 1;
+      pianogui.keyDown(i-OFFSET);
       synthManager.triggerOn(i);
     }
 
@@ -208,7 +207,7 @@ struct MyApp : public App {
       int i;
       m >> i;
 
-      pianogui.decay[i-OFFSET] = 0.95;
+      pianogui.keyUp(i-OFFSET);
       synthManager.triggerOff(i);
     }
 
@@ -216,9 +215,26 @@ struct MyApp : public App {
       int i;
       m >> i;
 
-      pianogui.press[i-OFFSET] = -0.4;
-      pianogui.decay[i-OFFSET] = 0.95;
+      pianogui.keyDown(i-OFFSET, -0.4); 
     }
+
+    if(m.addressPattern() == "/hoverOff/"){
+      int i;
+      m >> i;
+
+      pianogui.keyUp(i-OFFSET, 0.5); 
+    }
+
+
+    if(m.addressPattern() == "/noteColor/"){
+      int i; 
+      float d;
+      m >> i >> d;
+
+      pianogui.keyDown(i-OFFSET, 1, d);
+    }
+
+
   }
 };
 

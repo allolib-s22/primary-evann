@@ -9,13 +9,15 @@
 #include "al/ui/al_Parameter.hpp"
 
 #include "al/graphics/al_Font.hpp"
-#include "chords.hpp"
 
 #include <string>
 #include <vector>
 
 using namespace al;
 using namespace std;
+
+//Small GUI library written by Evan Nguyen. As of now, supports key number, key glow delay, key colors, and valid chord progressions.
+//Built to be used in tandem with my server.cpp and hands.py client, main_client.py. 
 
 class Piano {
     public:
@@ -25,16 +27,23 @@ class Piano {
         float keyPadding = 2.f;
         float fontSize;
 
-        int N;
+        float GLOBAL_DECAY = 0.95;
+
+        int N; //Number of WHITE keys
         float screenWidth, screenHeight;
         
         float* press; // key down
         float* decay;
         int* key_map_black;
         int* key_map_white;
+        float* hsv_s;
+        float* hsv_h;
 
         // Font renderer
         //FontRenderer fontRender;
+
+        // This is just for the purposes of demonstrating chords, not really a feature of the main GUI:
+        int max_colors = 21;
 
         vector<string> valid_progressions;
 
@@ -68,6 +77,8 @@ class Piano {
         Piano::~Piano(){
             delete[] press;
             delete[] decay;
+            delete[] hsv_s;
+            delete[] hsv_h;
             delete[] key_map_black;
             delete[] key_map_white;
         }
@@ -83,10 +94,12 @@ class Piano {
         }
 
         void Piano::selfInit(){
-            press = new float[112];
-            decay = new float[112];
-            key_map_black = new int[112];
-            key_map_white = new int[112];
+            press = new float[200]; //Initialized to 112 because of typical keyboard limitations. 
+            decay = new float[200]; //Should not specify more than 112.
+            hsv_s = new float[200]; 
+            hsv_h = new float[200];
+            key_map_black = new int[200];
+            key_map_white = new int[200];
 
             float w = screenWidth;
             float h = screenHeight;
@@ -97,6 +110,8 @@ class Piano {
             for (int i = 0; i < 112; i++) {
                 press[i] = 0;
                 decay[i] = 1;
+                hsv_s[i] = 0;
+                hsv_h[i] = 0;
             }
 
             int w_it = 0, b_it = 1;
@@ -126,10 +141,12 @@ class Piano {
         
         void Piano::draw(Graphics& g){
             for (int i = 0; i < 112; i++) {
-                if(abs(press[i]) < 0.05){
+                if(abs(press[i]) <= 0.03){
+                    hsv_s[i] = 0;
                     press[i] = 0;
                 }else{
                     press[i] *= decay[i];
+                    hsv_s[i] *= decay[i];
                 }
             }
             // Drawing white piano keys
@@ -150,7 +167,7 @@ class Piano {
                 float modifier_press = press[key_map_white[i]];
 
                 g.translate(x, y);
-                g.color(c + modifier_press);
+                g.color(HSV(hsv_h[key_map_white[i]], hsv_s[key_map_white[i]], c + modifier_press));
                 g.tint(c);
                 g.draw(meshKey);
                 
@@ -182,7 +199,7 @@ class Piano {
 
                 g.translate(x, y);
                 g.scale(1, 0.5);
-                g.color(c + modifier_press);
+                g.color(HSV(hsv_h[key_map_black[i]], hsv_s[key_map_black[i]], c + 0.4*hsv_s[key_map_black[i]] + modifier_press));
                 g.tint(c);
                 g.draw(meshKey);
                 
@@ -194,11 +211,31 @@ class Piano {
             }
         }
 
-        void next_valid_progression(){
-            
+        void keyDown(int key){
+            this->press[key] = true;
+            this->decay[key] = 1;
+            this->hsv_s[key] = 0;
         }
 
+        void keyDown(int key, float highlight){
+            this->press[key] = highlight;
+            this->decay[key] = 1;
+        }
 
+        void keyDown(int key, float highlight, float color){
+            this->press[key] = highlight;
+            this->decay[key] = 1;
+            this->hsv_s[key] = 0.45;
+            this->hsv_h[key] = color;
+        }
+
+        void keyUp(int key){
+            this->decay[key] = GLOBAL_DECAY;
+        }
+
+        void keyUp(int key, float decay_rate){
+            this->decay[key] = decay_rate;
+        }
 };
 
 #endif

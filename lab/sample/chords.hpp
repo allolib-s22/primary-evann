@@ -13,6 +13,8 @@
 
 using namespace std;
 
+//Used with courtesy of Ryan He from S22-allolib. This was a template of chord mappings that I will convert into another file.
+
 vector<string> allChords = {"I", "ii", "iii", "IV", "V", "vi", "viid", "I6", "ii6", "iii6", "IV6", "V6", "vi6", "viid6", "I64", "ii64", "iii64", "IV64", "V64", "vi64", "viid64"};
 unordered_map< string, vector<string> > major = 
 {

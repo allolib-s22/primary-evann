@@ -1,7 +1,9 @@
 # This is the main folder for all my work in S22.
 The hand-tracking client supports two modes, one that allows normal presses with all the main fingers (thumb is still buggy), and a mode that has automatic chord progression detection, based on the position of the index finger and the middle key of the chord.
-![](https://cdn.discordapp.com/attachments/599549030707625985/983985858401148988/unknown.png | width=100)
-![](https://cdn.discordapp.com/attachments/599549030707625985/983986413383061514/unknown.png | width=100)
+
+<img src="https://cdn.discordapp.com/attachments/599549030707625985/983985858401148988/unknown.png" width=50% height=50%>
+<img src="https://cdn.discordapp.com/attachments/599549030707625985/983986413383061514/unknown.png" width=50% height=50%>
+Above: A normal keystroke in mode 0, where in mode 1 a lightly blue hover outline of a chord appears.
 
 
 Here's the files included in this folder.

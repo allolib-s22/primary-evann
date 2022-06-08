@@ -1,4 +1,9 @@
 # This is the main folder for all my work in S22.
+The hand-tracking client supports two modes, one that allows normal presses with all the main fingers (thumb is still buggy), and a mode that has automatic chord progression detection, based on the position of the index finger and the middle key of the chord.
+![](https://cdn.discordapp.com/attachments/599549030707625985/983985858401148988/unknown.png | width=100)
+![](https://cdn.discordapp.com/attachments/599549030707625985/983986413383061514/unknown.png | width=100)
+
+
 Here's the files included in this folder.
 In order to start the app, please run the server using `./run.sh lab/OSC_server.cpp`
 Then run the python app `main_client.py`, either through a debugger or terminal.

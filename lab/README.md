@@ -21,7 +21,7 @@ You should be able to find more details on setting parameters and presets in `fu
 
 ## Minor files for demonstration/plug and play.
 
-`SineEnv.cpp` or `SubSyn.cpp` - this is where the voice comes from. Can be interchanged with other sound files, just make sure you import a valid SynthVoice.
+`SineEnv.cpp` or `SubSyn.cpp` - this is where the voice comes from. Can be interchanged with other sound files, just make sure you import a valid SynthVoice. SubSyn.cpp is a personal attempt at an acoustic piano sound. However, with limited time I could only wrap my head around the basics of synthesizing one, and left it incomplete.
 
 `sample/osc_client.py` - a really barebones client that will send UDP.
 

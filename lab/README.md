@@ -5,7 +5,7 @@ Then run the python app `main_client.py`, either through a debugger or terminal.
 
 You should be able to find more details on setting parameters and presets in `func.py` and `OSC_server.cpp`.
 
-###### All libs and components to run the app successfully
+## All libs and components to run the app successfully
 
 `func.py` - processing functions for the hand landmarks
 
@@ -19,7 +19,7 @@ You should be able to find more details on setting parameters and presets in `fu
 
 `piano.hpp` - This is a helper library that I wrote that handles the piano gui entirely. This allows customizable animation effects, i.e. decay time for key highlighting, key colors, number of keys, key width, etc. 
 
-###### Minor files for demonstration/plug and play.
+## Minor files for demonstration/plug and play.
 
 `SineEnv.cpp` or `SubSyn.cpp` - this is where the voice comes from. Can be interchanged with other sound files, just make sure you import a valid SynthVoice.
 

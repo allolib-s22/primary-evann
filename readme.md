@@ -3,6 +3,8 @@
 
 Please see the original repository, found here: https://github.com/AlloSphere-Research-Group/allolib_playground
 
+### ALL OF MY WORK IS CONTAINED INSIDE THE LAB FOLDER. Please consult that for the main bulk of the work I've done.
+
 This passion project was designed to accomplish a few things:
  - Bridge the gap between external applications and allolib, using the handy property of allolib being server-based.
  - Develop a 'server' that would handle the messages of a python UDP client, and provide a clear example for both.

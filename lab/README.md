@@ -36,6 +36,6 @@ You should be able to find more details on setting parameters and presets in `fu
 
 ## Further notes
 
-This application has been a rough series of debugging sessions after one and every iteration of an idea. There exists many parameters inside func.py with proper documentation to help someone 'calibrate' the system to their needs, but I reckon that this won't be enough. Always does a miniscule bug, or a single line of code act up every now and then. And sometimes, the detection for presses can be quite sporadic if the position straddles the border between two notes, or two states- leading to a spasm of sounds. This is just to preface that this app is FAR from perfect, but it's the best state I could get it in. I am severely limited by my knowledge in ML, and the speed of my laptop.
+This application has been a rough series of debugging sessions after one and every iteration of an idea. There exists many parameters inside func.py with proper documentation to help someone 'calibrate' the system to their needs, but I reckon that this won't be enough. Always does a miniscule bug, or a single line of code act up every now and then. And sometimes, the detection for presses can be quite sporadic if your finger straddles the border between two notes, or two states- leading to a spasm of sounds. This is just to preface that this app is FAR from perfect, but it's the best state I could get it in. I am severely limited by my knowledge in ML, and the speed of my system. 
 
 If it does work for someone, that will be a dream come true for me.
